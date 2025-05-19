@@ -3,23 +3,19 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Obstacles : MonoBehaviour 
+public class Obstacles : MonoBehaviour
 {
     public List<GameObject> obstacles;
-    
+
     public void ResetState()
     {
-       StartCoroutine(ForeachOba());
+        StartCoroutine(ForeachOba());
     }
 
     private IEnumerator ForeachOba()
     {
-
-        
         foreach (var oba in obstacles)
         {
-
-            
             int randomInt = UnityEngine.Random.Range(0, 100);
             if (randomInt > 49)
             {
@@ -30,6 +26,7 @@ public class Obstacles : MonoBehaviour
             else
             {
                 oba.SetActive(false);
+                oba.GetComponent<ObaGroup>().CloseAll();
             }
         }
     }

@@ -12,6 +12,7 @@ public class PlayerControl : MonoBehaviour
     int health = 0;
 
     public float speedForce = 15f;
+    public float realSpeed = 15f;
     public float maxSpeed = 15f;
 
     public float jumpForce = 10f;
@@ -35,6 +36,12 @@ public class PlayerControl : MonoBehaviour
 
     // 击退判定
     private bool isKnockback = false;
+    private bool inPiano;
+
+    // 在钢琴上
+    // public bool onPinao  = false;
+    // 在大手里
+    bool inHand = false;
 
     void Start()
     {
@@ -52,6 +59,12 @@ public class PlayerControl : MonoBehaviour
         isGrounded = Physics2D.Raycast(transform.position, Vector2.down, 0.5f, groundLayer);
         animator.SetBool("isGround", isGrounded);
 
+        // 速度检测
+        if (!inHand)
+        {
+            maxSpeed = realSpeed;
+        }
+        
         // 跳跃输入
         if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
         {
@@ -72,7 +85,7 @@ public class PlayerControl : MonoBehaviour
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
 
-        if (vertical >= 0f)
+        if (vertical >= 0f && !inPiano)
         {
             animator.SetBool("crouch", false);
         }
@@ -102,8 +115,8 @@ public class PlayerControl : MonoBehaviour
         {
             rb.velocity = new Vector2(maxSpeed, rb.velocity.y);
         }
-        
-        if (rb.velocity.x < -maxSpeed && !isKnockback )
+
+        if (rb.velocity.x < -maxSpeed && !isKnockback)
         {
             rb.velocity = new Vector2(-maxSpeed, rb.velocity.y);
         }
@@ -136,75 +149,120 @@ public class PlayerControl : MonoBehaviour
             currentGround = nowGround;
             previousGround = currentGround;
         }
-    }
 
-    private void OnCollisionEnter2D(Collision2D other)
-    {
-        
-        
-        if (other.gameObject.CompareTag("Car") )
+        if (other.CompareTag("Obstacles"))
         {
             // 进入击退状态
             isKnockback = true;
-            speedForce = 30f;   
-
-            animator.SetTrigger("damage");
-            // 清零当前速度（仅保留垂直速度，防止影响跳跃）
-            rb.velocity = new Vector2(0f, rb.velocity.y);
-            rb.AddForce(Vector2.right * 20f, ForceMode2D.Impulse);
-            
-            
-            // 协程控制时间
-            StartCoroutine(ResetKnockback());
-        }else if ( other.gameObject.CompareTag("Obstacles"))
-        {
-            // 进入击退状态
-            isKnockback = true;
-            speedForce = 30f;   
+            speedForce = 30f;
             animator.SetTrigger("damage");
 
             // 判断相对位置
             Vector3 relativePositon = other.gameObject.transform.position - transform.position;
-            if (relativePositon.x >= 0 )
+            if (relativePositon.x >= 0)
             {
                 // 清零当前速度（仅保留垂直速度，防止影响跳跃）
                 rb.velocity = new Vector2(0f, rb.velocity.y);
                 rb.AddForce(Vector2.left * 10f, ForceMode2D.Impulse);
-   
             }
             else
             {
                 rb.velocity = new Vector2(0f, rb.velocity.y);
                 rb.AddForce(Vector2.right * 10f, ForceMode2D.Impulse);
             }
+
             StartCoroutine(ResetKnockback());
-            
-           
         }
-        
-        if (other.gameObject.CompareTag("Obstacles"))
+
+        if (other.CompareTag("Piano"))
         {
-            // 短暂忽略碰撞（0.2秒）
-            Physics2D.IgnoreCollision(GetComponent<Collider2D>(), other.collider, true);
+            inPiano = true;
+        }
+
+        if (other.CompareTag("Hand"))
+        {
+            inHand = true;
+            maxSpeed = 0f;
+        }
+    }
+
+    void OnTriggerExit2D(Collider2D other)
+    {
+        if (other.CompareTag("Piano"))
+        {
+            inPiano = false;
+        }
+
+        if (other.CompareTag("Hand"))
+        {
+            maxSpeed = realSpeed;
+            inHand = false;
+        }
+    }
+
+    private void OnCollisionEnter2D(Collision2D other)
+    {
+        if (other.gameObject.CompareTag("Car"))
+        {
+            // 进入击退状态
+            isKnockback = true;
+            speedForce = 30f;
+
+            animator.SetTrigger("damage");
+            // 清零当前速度（仅保留垂直速度，防止影响跳跃）
+            rb.velocity = new Vector2(0f, rb.velocity.y);
+            rb.AddForce(Vector2.right * 20f, ForceMode2D.Impulse);
+
+
+            // 协程控制时间
+            StartCoroutine(ResetKnockback());
+        }
+        else if (other.gameObject.CompareTag("Obstacles"))
+        {
+            // 进入击退状态
+            isKnockback = true;
+            speedForce = 30f;
+            animator.SetTrigger("damage");
+
+            // 判断相对位置
+            Vector3 relativePositon = other.gameObject.transform.position - transform.position;
+            if (relativePositon.x >= 0)
+            {
+                // 清零当前速度（仅保留垂直速度，防止影响跳跃）
+                rb.velocity = new Vector2(0f, rb.velocity.y);
+                rb.AddForce(Vector2.left * 10f, ForceMode2D.Impulse);
+            }
+            else
+            {
+                rb.velocity = new Vector2(0f, rb.velocity.y);
+                rb.AddForce(Vector2.right * 10f, ForceMode2D.Impulse);
+            }
+
+            StartCoroutine(ResetKnockback());
+
+            // 短暂忽略碰撞
+            Physics2D.IgnoreCollision(GetComponent<BoxCollider2D>(), other.collider, true);
+            Physics2D.IgnoreCollision(GetComponent<PolygonCollider2D>(), other.collider, true);
+
             StartCoroutine(ReEnableCollision(other.collider));
         }
     }
+
 
     // 碰撞时短暂放宽极限速度
     private IEnumerator ResetKnockback()
     {
         yield return new WaitForSeconds(0.4f);
         isKnockback = false;
-        speedForce = 100f;   
-
+        speedForce = 100f;
     }
-    
+
 
     // 关闭碰撞体防止bug
     private IEnumerator ReEnableCollision(Collider2D otherCollider)
     {
-        yield return new WaitForSeconds(1f);
-        Physics2D.IgnoreCollision(GetComponent<Collider2D>(), otherCollider, false);
- 
+        yield return new WaitForSeconds(3f);
+        Physics2D.IgnoreCollision(GetComponent<BoxCollider2D>(), otherCollider, false);
+        Physics2D.IgnoreCollision(GetComponent<PolygonCollider2D>(), otherCollider, false);
     }
 }
