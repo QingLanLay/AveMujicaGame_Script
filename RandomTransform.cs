@@ -11,6 +11,6 @@ public class RandomTransform : MonoBehaviour
 {
     private void OnEnable()
     {
-        transform.position = transform.position + (UnityEngine.Random.Range(-5, 5) * Vector3.right);
+        transform.position = transform.position + (UnityEngine.Random.Range(-15, 15) * Vector3.right);
     }
 }

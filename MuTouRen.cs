@@ -58,7 +58,7 @@ public class MuTouRen : MonoBehaviour
 
         bullet.transform.rotation = Quaternion.AngleAxis(finalAngle, Vector3.forward);
 
-        Rigidbody2D rb = bullet.GetComponent<Rigidbody2D>();
+        Rigidbody2D rb = bullet.transform.GetComponent<Rigidbody2D>();
 
         bulletSpeed = Random.Range(1f, 10f);
         rb.velocity = bullet.transform.right * bulletSpeed;

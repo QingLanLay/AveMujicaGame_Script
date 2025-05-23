@@ -10,12 +10,21 @@ public class ObaGroup : MonoBehaviour
     public GameObject piano;
     public GameObject floorOba;
     public GameObject muTouRen;
-    public GameObject hand;
+    // 控制难度
+    public int gameDifficulty; 
 
     public void ResetState()
     {
+        
+        int currentlevel = PlayerControl.level;
+        if (currentlevel>=10)
+        {
+            currentlevel = 10;
+        }
+        gameDifficulty = currentlevel * 3;
+        
         int randomInt = Random.Range(0, 100);
-        if (randomInt > 49)
+        if (randomInt < gameDifficulty + 20)
         {
             piano.SetActive(true);
         }
@@ -25,7 +34,7 @@ public class ObaGroup : MonoBehaviour
         }
 
         int randomInt2 = Random.Range(0, 100);
-        if (randomInt2 > 50)
+        if (randomInt2 < gameDifficulty*2 + 20)
         {
             muTouRen.SetActive(true);
         }
@@ -35,7 +44,7 @@ public class ObaGroup : MonoBehaviour
         }
 
         int randomInt3 = Random.Range(0, 100);
-        if (randomInt3 > 50)
+        if (randomInt3 < gameDifficulty/2 +10)
         {
             floorOba.SetActive(true);
         }
@@ -43,16 +52,7 @@ public class ObaGroup : MonoBehaviour
         {
             floorOba.SetActive(false);
         }
-
-        int randomInt4 = Random.Range(0, 100);
-        if (randomInt4 > 50)
-        {
-            hand.SetActive(true);
-        }
-        else
-        {
-            hand.SetActive(false);
-        }
+        
     }
 
 
@@ -61,6 +61,6 @@ public class ObaGroup : MonoBehaviour
         piano.SetActive(false);
         floorOba.SetActive(false);
         muTouRen.SetActive(false);
-        hand.SetActive(false);
+
     }
 }

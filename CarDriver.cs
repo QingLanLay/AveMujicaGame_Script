@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Random = Unity.Mathematics.Random;
 
 public class CarDriver : MonoBehaviour
 {
@@ -12,11 +13,22 @@ public class CarDriver : MonoBehaviour
 
     private Vector3 carVelocity = Vector3.zero; // 由SmoothDamp内部使用
     public GameObject hand;
+    
+    // 计时器
+    public float interval = 50f;
+    
+    // 计时器是否正在运行
+    public bool isRunning = false;
+    
+    // 计时器累计时间
+    public float elapsedTime = 0f;
+    
 
     private void Start()
     {
         rb = car.GetComponent<Rigidbody2D>();
         player = GameObject.FindGameObjectWithTag("Player");
+        StartTimer();
     }
 
     private void Update()
@@ -37,21 +49,45 @@ public class CarDriver : MonoBehaviour
             StartCoroutine(Reborn());
         }
 
-        if (hand.activeSelf == false)
+        if (isRunning)
         {
-            StartCoroutine(handGo());
+            elapsedTime += Time.deltaTime;
+            
+            if (elapsedTime >= interval/PlayerControl.level)
+            {
+                if (hand.activeSelf == false )
+                {
+                    handGo();
+                    // 重置计时器
+                    elapsedTime = 0f;
+                }
+            
+            }
         }
+        
     }
 
-    private IEnumerator handGo()
+    private void handGo()
     {
-        yield return new WaitForSeconds(2f);
         hand.SetActive(true);
     }
 
     private IEnumerator Reborn()
     {
         yield return new WaitForSeconds(1f);
-        player.transform.position = new Vector3(car.transform.position.x+10f, 5f,0);
+        player.transform.position = new Vector3(car.transform.position.x + 10f, 5f, 0);
+    }
+    
+    // 启动计时器
+    public void StartTimer()
+    {
+        isRunning = true;
+        elapsedTime = 0f;
+    }
+
+    // 停止计时器
+    public void StopTimer()
+    {
+        isRunning = false;
     }
 }

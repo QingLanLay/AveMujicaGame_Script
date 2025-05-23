@@ -4,10 +4,10 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public class Hand : MonoBehaviour 
+public class Foot : MonoBehaviour 
 {
     GameObject player;
-    public  GameObject car;
+    public  GameObject xiangZi;
     private Rigidbody2D rb;
     
     private void Start()
@@ -18,15 +18,16 @@ public class Hand : MonoBehaviour
 
     private void OnEnable()
     {
-        transform.position =  car.transform.position;
+        transform.position =  xiangZi.transform.position+Vector3.up* 3+ Vector3.right*3;
     }
     
     private void FixedUpdate() {
         
-        if (transform.position.x - player.transform.position.x >25f)
+        if ( player.transform.position.x -
+            transform.position.x >25f)
         {
             gameObject.SetActive(false);
         }
-        rb.velocity = new Vector2(20f, 0);
+        rb.velocity = new Vector2(-15f, 0);
     }
 }
