@@ -57,8 +57,15 @@ public class PlayerControl : MonoBehaviour
 
     // time
     public static float gameTime;
+    
+    // 得分
+    public static int useWudiNum = 0;
+    public static int beHurted = 0;
 
     public GameObject foot;
+
+    public Joystick joystick;
+
     void Start()
     {
         // 刚体
@@ -81,38 +88,46 @@ public class PlayerControl : MonoBehaviour
             if (level >= 10  && !isCrouch )
             {
                 maxSpeed = realSpeed + 10;
+
             }
             else if (level < 10 && !isCrouch  )
             {
                 maxSpeed = realSpeed + level;
+
             }else if (level >= 10 && isCrouch)
             {
                 maxSpeed = (realSpeed + 10)*0.85f;
+
             }else if (level < 10 && isCrouch )
             {
                 maxSpeed = (realSpeed + level)*0.85f;
+
             }
+            
+            
             
         }
 
         // 跳跃输入
-        if (Input.GetKeyDown(KeyCode.Space)&& isGrounded)
-        {
-            GetJump();
-        }
+#if UNITY_STANDALONE_WIN
+        InputJump();
+
+#endif
 
         // 动画切换
         float currentSpeed = rb.velocity.x;
         animator.SetFloat("speed", Mathf.Abs(currentSpeed));
+        
+#if UNITY_STANDALONE_WIN
+        InputWudi();
 
-        if (Input.GetKeyDown(KeyCode.J) && wudiNum > 0 && !isWudi) 
-        {
-            StartCoroutine(IngoneBox());
-        }
+#endif
 
         currentGameTime();
-        
+    
     }
+
+
 
     private void currentGameTime()
     {
@@ -121,6 +136,7 @@ public class PlayerControl : MonoBehaviour
 
     private IEnumerator IngoneBox()
     {
+        useWudiNum += 1;
         var wudi = this.transform.GetChild(0);
         wudi.gameObject.SetActive(true);
         this.gameObject.layer = LayerMask.NameToLayer("Wudi");
@@ -147,13 +163,13 @@ public class PlayerControl : MonoBehaviour
         rb.velocity = new Vector2(rb.velocity.x, 0);
         rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
         animator.SetTrigger("jump");
+        AudioPool.instance.PlayGameMusic("DUCK");
     }
 
     void FixedUpdate()
     {
         // 水平移动
-        float horizontal = Input.GetAxisRaw("Horizontal");
-        float vertical = Input.GetAxisRaw("Vertical");
+        var horizontal = InputMove(out var vertical);
 
         // 移动控制
         MoveControl(vertical, horizontal);
@@ -168,6 +184,58 @@ public class PlayerControl : MonoBehaviour
             rb.AddForce(Vector2.down * 20f);
         }
     }
+#if UNITY_STANDALONE_WIN
+    private  float InputMove(out float vertical)
+    {
+        float horizontal = Input.GetAxisRaw("Horizontal");
+        vertical = Input.GetAxisRaw("Vertical");
+        return horizontal;
+    }
+    
+        private void InputWudi()
+    {
+        if (Input.GetKeyDown(KeyCode.J) && wudiNum > 0 && !isWudi) 
+        {
+            AudioPool.instance.PlayGameMusic("sakisakisaki",1f);
+            StartCoroutine(IngoneBox());
+        }
+    }
+
+    private void InputJump()
+    {
+        if (Input.GetKeyDown(KeyCode.Space)&& isGrounded)
+        {
+            GetJump();
+        }
+    }
+    #endif
+    
+#if UNITY_ANDROID
+        private  float InputMove(out float vertical)
+    {
+        float horizontal = joystick.Horizontal;
+        vertical = joystick.Vertical;
+        return horizontal;
+    }
+        
+    public void InputWudi()
+    {
+        if (wudiNum > 0 && !isWudi) 
+        {
+            AudioPool.instance.PlayGameMusic("sakisakisaki",1f);
+            StartCoroutine(IngoneBox());
+        }
+    }
+
+    public void InputJump()
+    {
+        if (isGrounded)
+        {
+            GetJump();
+        }
+    }
+#endif
+
 
     /// <summary>
     ///  最大速度控制
@@ -192,6 +260,7 @@ public class PlayerControl : MonoBehaviour
     /// <param name="horizontal"></param>
     private void MoveControl(float vertical, float horizontal)
     {
+
         // 进钢琴下蹲
         if (vertical >= 0f && !inPiano)
         {
@@ -264,6 +333,9 @@ public class PlayerControl : MonoBehaviour
                 rb.AddForce(Vector2.right * 10f, ForceMode2D.Impulse);
             }
 
+            
+
+
             StartCoroutine(ResetKnockback());
         }
 
@@ -289,6 +361,7 @@ public class PlayerControl : MonoBehaviour
                 }
                 level += 1;
                 isUp = true;
+                AudioPool.instance.PlayGameMusic("anon唐哭");
             }
         }
 
@@ -388,6 +461,10 @@ public class PlayerControl : MonoBehaviour
             Physics2D.IgnoreCollision(GetComponent<PolygonCollider2D>(), other.collider, true);
 
             StartCoroutine(ReEnableCollision(other.collider));
+            if (other.gameObject.name == "floorObastacles")
+            {
+                AudioPool.instance.PlayGameMusic("linggangu",1f);
+            }
         }
     }
 
@@ -404,6 +481,7 @@ public class PlayerControl : MonoBehaviour
     // 关闭碰撞体防止bug
     private IEnumerator ReEnableCollision(Collider2D otherCollider)
     {
+        beHurted += 1;
         yield return new WaitForSeconds(3f);
         Physics2D.IgnoreCollision(GetComponent<BoxCollider2D>(), otherCollider, false);
         Physics2D.IgnoreCollision(GetComponent<PolygonCollider2D>(), otherCollider, false);

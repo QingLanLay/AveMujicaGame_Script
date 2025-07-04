@@ -18,6 +18,7 @@ public class Hand : MonoBehaviour
 
     private void OnEnable()
     {
+        AudioPool.instance.PlayGameMusic("初华回来");
         transform.position =  car.transform.position;
     }
     

@@ -13,6 +13,16 @@ public class UIControl : MonoBehaviour
     public Text time;
     public GameObject menuUI;
     public GameObject endUI;
+    
+    public Slider musicSlider;
+    public Slider ambientSlider;
+    public static UIControl instance;
+
+    public void Awake()
+    {
+        instance = this;
+    }
+
     private void Update()
     {
         wudiNum.text = "无敌次数:" + playerControl.wudiNum;
@@ -29,5 +39,16 @@ public class UIControl : MonoBehaviour
     {
         menuUI.SetActive(true);
         Time.timeScale = 0;
+    }
+
+    public void ChangeAmbient()
+    {
+        AudioManager.instance.mixer.SetFloat("Ambient", AudioManager.instance.ConertSoundVolume(ambientSlider.value));
+    }
+
+    public void ChangeMusic()
+    {
+        AudioManager.instance.mixer.SetFloat("Music", AudioManager.instance.ConertSoundVolume(musicSlider.value));
+
     }
 }

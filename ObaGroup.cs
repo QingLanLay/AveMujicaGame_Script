@@ -12,6 +12,12 @@ public class ObaGroup : MonoBehaviour
     public GameObject muTouRen;
     // 控制难度
     public int gameDifficulty; 
+    public float y;
+
+    private void Awake()
+    {
+        y = muTouRen.transform.position.y;
+    }
 
     public void ResetState()
     {

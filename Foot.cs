@@ -18,6 +18,7 @@ public class Foot : MonoBehaviour
 
     private void OnEnable()
     {
+        AudioPool.instance.PlayGameMusic("saki成神");
         transform.position =  xiangZi.transform.position+Vector3.up* 3+ Vector3.right*3;
     }
     

@@ -19,8 +19,12 @@ public class InitManager : MonoBehaviour
     public GameObject endUI;
     public Text endText;
     public GameObject foot;
+
+    public float maxCount = 0f;
+    public Text maxCountText;
     
     public GameObject startUI; 
+    
 
     Vector3 initXiangZi;
     Vector3 initPlayer;
@@ -31,8 +35,21 @@ public class InitManager : MonoBehaviour
     Vector3 initFloorBase3;
 
     public static InitManager instance;
+
+    public GameObject endImage1;
+    public GameObject endImage2;
+    public bool startGame = false;
+    
+    [Header("移动端")]
+    public GameObject isJump;
+    public GameObject isWudi;
+    public GameObject JoyStick;
     private void Awake()
     {
+                
+        isJump.SetActive(false);
+        isWudi.SetActive(false);
+        JoyStick.SetActive(false);
         if (instance == null)
         {
             instance = this;
@@ -61,6 +78,14 @@ public class InitManager : MonoBehaviour
 
     public void ReStart()
     {
+#if UNITY_ANDROID
+        isJump.SetActive(true);
+        isWudi.SetActive(true);
+        JoyStick.SetActive(true);
+#endif
+
+        PlayerControl.beHurted = 0;
+        PlayerControl.useWudiNum = 0;
         StopAllCoroutines();
         menuUI.SetActive(false);
         Time.timeScale = 1;
@@ -107,6 +132,12 @@ public class InitManager : MonoBehaviour
 
     public void OpenEndUI()
     {
+#if UNITY_ANDROID
+        isJump.SetActive(false);
+        isWudi.SetActive(false);
+        JoyStick.SetActive(false);
+#endif
+        
         endUI.SetActive(true);
         Time.timeScale = 0;
         int df1 = PlayerControl.health;
@@ -115,19 +146,81 @@ public class InitManager : MonoBehaviour
         if (PlayerControl.health <= 0)
         {
             endText.text = "得分：" + 0 ;
-
+            maxCountText.text = "最高得分："+maxCount;
+            
+            endImage1.SetActive(true);
+            endImage2.SetActive(false);
         }
         else
         {
-            endText.text = "得分：" + (1000 - gameTime + df1 + df2) ;
 
+            float currentCount = (1000 - gameTime + df1 + df2);
+            endText.text = "得分：" + currentCount;
+            if (currentCount >= maxCount)
+            {
+                maxCount = currentCount;
+                maxCountText.text = "最高得分：" + maxCount;
+            }
+
+            if (PlayerControl.useWudiNum == 0 )
+            {
+                currentCount = (1000 - gameTime + df1 + df2)+2500;
+                endText.text = "得分：" + currentCount  + "  无敌之人！";
+                if (currentCount >= maxCount)
+                {
+                    maxCount = currentCount;
+                    maxCountText.text = "最高得分：" + maxCount;
+                }
+            }
+            
+            if (PlayerControl.beHurted == 0)
+            {
+                currentCount = (1000 - gameTime + df1 + df2)+2500;
+                endText.text = "得分：" + currentCount  + "  无伤大佬！";
+                if (currentCount >= maxCount)
+                {
+                    maxCount = currentCount;
+                    maxCountText.text = "最高得分：" + maxCount;
+                }
+            }
+            
+            if (PlayerControl.useWudiNum == 0 && PlayerControl.beHurted == 0)
+            {
+                currentCount = (1000 - gameTime + df1 + df2)+5000;
+                endText.text = "得分：" + currentCount  + "  神！";
+                if (currentCount >= maxCount)
+                {
+                    maxCount = currentCount;
+                    maxCountText.text = "最高得分：" + maxCount;
+                }
+            }
+            
+            endImage1.SetActive(false);
+            endImage2.SetActive(true);
         }
     }
 
     public void StartGame()
     {
+
+#if UNITY_ANDROID
+        isJump.SetActive(true);
+        isWudi.SetActive(true);
+        JoyStick.SetActive(true);
+#endif
+        startGame = true;
+        AudioManager.instance.PlayRandomMusic();
         Time.timeScale = 1;
         startUI.SetActive(false);
+        AudioManager.instance.mixer.SetFloat("Ambient", AudioManager.instance.ConertSoundVolume(UIControl.instance.ambientSlider.value));
+        AudioManager.instance.mixer.SetFloat("Music", AudioManager.instance.ConertSoundVolume(UIControl.instance.ambientSlider.value));
+
+    }
+
+    public void QuitGame()
+    {
+        Application.Quit();
     }
 }
+
 
